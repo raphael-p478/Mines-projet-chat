@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            font-family: sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+        }
+        .card {
+            width: 320px;
+            padding: 24px;
+            border: 1px solid black;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 1.4rem;
+            text-align: center;
+        }
+        input {
+            padding: 8px;
+            font-size: 1rem;
+        }
+        .buttons {
+            display: flex;
+            gap: 8px;
+        }
+        button {
+            flex: 1;
+            padding: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        #error {
+            color: #c00;
+            min-height: 1.2em;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Chat — Login</h1>
+        <input id="name" placeholder="name" autocomplete="username">
+        <input id="password" type="password" placeholder="password" autocomplete="current-password">
+        <div class="buttons">
+            <button id="loginBtn">Login</button>
+            <button id="registerBtn">Register</button>
+        </div>
+        <div id="error"></div>
+    </div>
+    <script>
+        const nameInput = document.getElementById("name");
+        const passwordInput = document.getElementById("password");
+        const errorDiv = document.getElementById("error");
+        const loginBtn = document.getElementById("loginBtn");
+        const registerBtn = document.getElementById("registerBtn");
+
+        async function submitTo(path) {
+            errorDiv.textContent = "";
+            const name = nameInput.value;
+            const password = passwordInput.value;
+            if (!name || !password) {
+                errorDiv.textContent = "Name and password are required.";
+                return;
+            }
+            try {
+                const response = await fetch(path, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ name, password })
+                });
+                if (response.ok) {
+                    window.location = "/chat";
+                } else {
+                    let message = "Something went wrong.";
+                    try {
+                        const data = await response.json();
+                        if (data && data.detail) {
+                            message = data.detail;
+                        }
+                    } catch (_) { /* body was not JSON */ }
+                    errorDiv.textContent = message;
+                }
+            } catch (err) {
+                errorDiv.textContent = "Network error.";
+            }
+        }
+
+        loginBtn.addEventListener("click", () => submitTo("/login"));
+        registerBtn.addEventListener("click", () => submitTo("/register"));
+
+        // Allow pressing Enter in any field to trigger Login.
+        [nameInput, passwordInput].forEach(input => {
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    submitTo("/login");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
